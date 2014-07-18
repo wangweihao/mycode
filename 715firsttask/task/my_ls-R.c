@@ -9,7 +9,7 @@ int my_ls_r(const char *path)
 
 	if((dir = opendir(path)) == NULL)
 	{
-		printf("path error!");
+		printf("path error!!");
 		exit(1);
 	}
 	chdir(path);
