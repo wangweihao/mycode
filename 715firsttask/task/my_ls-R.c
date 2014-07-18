@@ -12,7 +12,7 @@ int my_ls_r(const char *path)
 		printf("path error!");
 		exit(1);
 	}
-
+	chdir(path);
 	while((p = readdir(dir)) != NULL)
 	{
 		lstat(p->d_name,&buf);
@@ -26,7 +26,6 @@ int my_ls_r(const char *path)
 			printf("\n");
 			printf("%s :",p->d_name);
 			printf("\n");
-			chdir(path);
 			my_ls_r(p->d_name);
 		}
 		else
@@ -41,7 +40,8 @@ int my_ls_r(const char *path)
 		}
 	}
 	printf("\n");
-
+	chdir("..");
+	closedir(dir);
 	return 0;
 }
 
