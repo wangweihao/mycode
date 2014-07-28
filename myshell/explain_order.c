@@ -13,27 +13,20 @@
 #define have_redirectOut 3        // <
 
 void explain_order(char *buf);
-void do_order(int tflag);
 
-int main(int argc, char *argv[])
-{
-	char buf[10] = "ls -a &";
-	explain_order(buf);
-
-	return EXIT_SUCCESS;
-}
 
 void explain_order(char *buf)
 {
 	int i = 0;
-	int flag = 0,tflag = 0;
+	int flag = 0,tflag = -1;
 	int a;
 
 	while(buf[i] != '\0')
 	{
-		if(buf[i] == '&')        //&是可以兼容其他符号 所以不用break
+		if(buf[i] == 'l' && buf[i+1] == 's' && buf[i+3] == '0')
 		{
-			flag = 1; 
+			flag = 0;
+			break;
 		}
 		if(buf[i] == '<')
 		{
@@ -50,9 +43,24 @@ void explain_order(char *buf)
 			tflag = have_pipe;
 			break;
 		}
+		//if(buf[i] == 'l' && buf[i+1] == 's' && buf[i+3] != '&' && buf[i+3] !=  '<' && buf[i+3] != '>' && buf[i+3] != '|' )
+		/*if(buf[i] == 'l' && buf[i+1] == 's')
+		{
+			tflag = 0;
+			break;
+		}*/
 		i++;
 	}
-
+	i = 0;
+	while(buf[i] != '\0')
+	{
+		if(buf[i] == '&')
+		{
+			flag = 1;
+			break;
+		}
+		i++;
+	}
 	if(flag == 1)
 	{
 	        a = fork();    //创建子进程
@@ -63,9 +71,10 @@ void explain_order(char *buf)
 				exit(-1);
 			case 0:                                      //说明是子进程，后台执行接下来的程序。
 				printf("i am childprocess\n");
-				do_order(tflag);
+				do_order(tflag,buf);
 				flag = 0;
 				exit(0);
+				printf("myshell:");
 			default:
 				break;
 		}
@@ -73,13 +82,9 @@ void explain_order(char *buf)
 	else    
 	{
 		printf("i am fatherprocess\n");
-		do_order(tflag);
+		do_order(tflag,buf);
 	
 	}
 
 }
 
-void do_order(int tflag)
-{
-	printf("i an making\n");
-}
