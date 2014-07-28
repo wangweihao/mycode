@@ -22,12 +22,12 @@ void explain_order(char *buf)
 	int a;
 
 	while(buf[i] != '\0')
-	{
-		if(buf[i] == 'l' && buf[i+1] == 's' && buf[i+3] == '0')
+	{/*
+		if(buf[i] == 'l' && buf[i+1] == 's' && buf[i+3] == '\0')
 		{
 			flag = 0;
 			break;
-		}
+		}*/
 		if(buf[i] == '<')
 		{
 			tflag = have_redirectOut;
@@ -44,11 +44,6 @@ void explain_order(char *buf)
 			break;
 		}
 		//if(buf[i] == 'l' && buf[i+1] == 's' && buf[i+3] != '&' && buf[i+3] !=  '<' && buf[i+3] != '>' && buf[i+3] != '|' )
-		/*if(buf[i] == 'l' && buf[i+1] == 's')
-		{
-			tflag = 0;
-			break;
-		}*/
 		i++;
 	}
 	i = 0;
@@ -60,6 +55,15 @@ void explain_order(char *buf)
 			break;
 		}
 		i++;
+	}
+	i = 0;
+	if(tflag == -1)
+	{
+		while(buf[i] == 'l' && buf[i+1] == 's')
+		{
+			tflag = 8;
+			break;
+		}
 	}
 	if(flag == 1)
 	{
