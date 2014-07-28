@@ -1,21 +1,3 @@
-/*
- * =====================================================================================
- *
- *       Filename:  do_order.c
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  2014年07月25日 00时56分53秒
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  wangweihao, 578867817@qq.com
- *        Company:  Class 1304 of Communication
- *
- * =====================================================================================
- */
-
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -29,33 +11,31 @@
 void do_order(int tflag, char *buf);
 void have_pipe(char *buf);
 void have_redirectIn(char *buf);
-void have_redirectOut(void);
+void have_redirectOut(char *buf);
 void my_ls(char *path);
 
-int main(int argc, char *argv[])
-{
-	char buf[256];
-	getcwd(buf, 256);
-	printf("%s",buf);
-//	my_ls(buf, lsflag);
-//	have_redirectIn(buf);
-	have_redirectOut();
-	return EXIT_SUCCESS;
-}
 
 void do_order(int tflag ,char *buf)
 {
+	char a[256];
 	switch(tflag)
 	{
 		case 1:
 			have_pipe(buf);
 			break;
 		case 2:
-			//have_redirectIn(buf);
+			have_redirectIn(buf);
 			break;
 		case 3:
-			have_redirectOut();
+			have_redirectOut(buf);
 			break;
+		case 8: 
+			my_ls(getcwd(a,256));
+			break;
+		case -1:
+			printf("命令输入错误，请重新输入\n");
+			break;
+
 	}
 
 }
@@ -90,14 +70,28 @@ void have_pipe(char *buf)
 	}
 	close(fd1);
 	close(fd2);
-	exit(0);
 }
 
 void have_redirectIn(char *buf)      //> 
 {
-	int oldfd;
-	
-	oldfd = open("aa.txt", O_CREAT | O_RDWR | O_APPEND, S_IRWXU);
+	int oldfd, savefd,ttyfd;
+	int i = 0,j = 0;
+	char tempbuf[256];
+	char bbuf[256];
+	fflush(stdout);
+	savefd = dup(STDOUT_FILENO);
+	while(buf[i++] != '>')
+	      ;                        //找到>
+	i += 1;    //因为>后面有一个空格
+	do
+	{
+	      tempbuf[j++] = buf[i];
+		fflush(stdin);
+	}
+	while(buf[++i] != '\0');
+	tempbuf[j] = '\0';
+	fflush(stdin);      
+	oldfd = open(tempbuf, O_CREAT | O_RDWR | O_APPEND, 0644);
 	if(oldfd == -1)
 	{
 		printf("open file failed\n");
@@ -106,19 +100,34 @@ void have_redirectIn(char *buf)      //>
 	else
 	{
 		dup2(oldfd, 1);
-		my_ls(buf);
+		my_ls(tempbuf);
 
 	}
+	dup2(savefd, 1);
+	ttyfd = open("/dev/tty",O_RDWR);
+	dup2(ttyfd, 1);
+	close(ttyfd);
 	close(oldfd);
-	exit(0);
+	return;
 }
 
-void have_redirectOut(void)    //需要传入bb.txt 也就是buf     <
+void have_redirectOut(char *buf)    //需要传入bb.txt 也就是buf     <
 {
 	int oldfd; 
-	char *arg[5] = {"wc -c", 0};
+	int i = 8,j = 0;
+	char *arg[5] = {"wc","-c"};
+	char tempbuf[10] = {'0'};
 
-	oldfd = open("bb.txt", O_CREAT | O_RDWR | O_APPEND, S_IRWXU);   
+	while(buf[i] != '\0')
+	{
+	      tempbuf[j] = buf[i];
+		i++;
+		j++;
+	}
+	tempbuf[j] = '\0';
+	arg[2] = tempbuf;
+	fflush(stdin);
+	oldfd = open(arg[2], O_RDONLY | O_CREAT |O_APPEND, 0644);   
 	if(oldfd == -1)
 	{
 		printf("open file failed\n");
@@ -129,8 +138,6 @@ void have_redirectOut(void)    //需要传入bb.txt 也就是buf     <
 		dup2(oldfd, 0);
 		execvp(arg[0],arg);
 	}
-	close(oldfd);
-	exit(0);
 
 }
 
@@ -140,6 +147,7 @@ void my_ls(char *path)
 	struct dirent *ptr;
 	int i = 0;
 	
+	getcwd(path, 256);
 	if((dir = opendir(path)) == NULL)
 	{
 		printf("error\n");
@@ -155,6 +163,5 @@ void my_ls(char *path)
 			i++;
 		}	
 	}
-	printf("\n");
 	closedir(dir);
 }
