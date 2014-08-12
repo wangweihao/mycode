@@ -151,6 +151,7 @@ void exe_info(int *con_fd)
 		printf("\n抱歉！您查找的人不存在！\n您不能和不存在的人聊天\n请重新输入\n");
 		return;
 	}
+	send(people[i].confd, tmpname[name_i], strlen(tmpname[name_i]), 0);
 	name_i++;
 	pthread_mutex_unlock (&number_mutex);
 	fclose(fp);
