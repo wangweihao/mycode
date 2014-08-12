@@ -33,6 +33,12 @@ char tmpname[10][40]; //私聊对象，每个人只能有一个
 //客户端和服务器共用的数据都写在头文件里
 //5个群信息
 //10个用户信息
+struct user_info
+{
+	char senduser[20];
+	char recvuser[20];
+	char buff[256];
+};
 
 struct group_member
 {

@@ -38,21 +38,60 @@ void see_friend();
 void see_live_friend();
 void see_group();
 void see_live_group();
+void see_data(struct Info *tmp);
 void create_client();
 void enter_group();
 void mod_identify();
 void read_data();
 void init_info(struct Info *user);
+void init_a(struct Info *a);
 
+char username[20];
+int fff = 0;
+struct enter_user
+{
+	char number[20];
+	char secret[20];
+};
 
+struct enter_user u[10];
+struct Info a[10];
+int dex;
 
 int main(int argc, char *argv[])
 {
 	init_info(user);
+	init_a(a);
 	face();
 	read_data();
 
 	return EXIT_SUCCESS;
+}
+
+void init_a(struct Info *a)
+{
+	FILE *p;
+	int i;
+
+	p = fopen("user_info.txt", "rt+");
+	for(i = 0; i < 10; i++)
+	{
+		memset(a[i].number, 0, sizeof(a[i].number));
+		memset(a[i].secret, 0, sizeof(a[i].secret));
+		memset(a[i].name, 0, sizeof(a[i].name));
+		memset(a[i].sex, 0, sizeof(a[i].sex));
+		memset(a[i].aut, 0, sizeof(a[i].aut));
+		a[i].age = -1;
+		a[i].con_fd = -1;
+		a[i].exist = -1;
+		a[i].flag = 0;
+		a[i].attr = 0;
+	}
+	for(i = 0; i < 10; i++)
+	{
+		fscanf(p, "%s %s %s %d %s %s %d %d %d %d\n", a[i].number, a[i].secret, a[i].name, &a[i].age, a[i].sex, a[i].aut, &a[i].attr, &a[i].exist, &a[i].con_fd, &a[i].flag);
+	}
+	fclose(p);
 }
 
 void init_info(struct Info *user)
@@ -71,7 +110,7 @@ void init_info(struct Info *user)
 	{
 		user[i].con_fd = -1;
 		user[i].exist = -1;
-		user[i].flag = -1;
+		//user[i].flag = -1;
 	}
 
 	for(j = 0; j < 5; j++)
@@ -84,8 +123,6 @@ void init_info(struct Info *user)
 	}
 	tmp = -1;
 }
-
-
 
 void read_data()
 {
@@ -135,7 +172,7 @@ void face(void)
 	printf("\n");
 	printf("\t\t                      ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁                  \n");
 	printf("\t\t                                                       \n");
-	printf("\t\t                        easy  聊天室                   \n");
+	printf("\t\t                      mr wang   聊天室                   \n");
 	printf("\t\t                                                       \n");
 	printf("\t\t         ╭∞ ━━━╮.oо◎                                   \n");
 	printf("\t\t         ┃ ┃            1 登   陆                      \n");
@@ -167,6 +204,9 @@ void face(void)
 			break;
 		default:
 			printf("输入错误！请从新输入..\n");
+			sleep(2);
+			face();
+			break;
 	}
 
 }
@@ -175,21 +215,53 @@ void enter_user()
 {
 	int i = 3, j = 0;
 	char ch;
-	int oldfd, save_fd;
+	int s;
 	char *pass;
-	char user[20];
 	char secret[20];
+	FILE *fp;
+	int k = 0;
+
+	for(k = 0; k < 10; k++)
+	{
+		memset(u[k].secret, '\0', sizeof(u[k].secret));
+		memset(u[k].number, 0, sizeof(u[k].number));
+	}
+
+	fp = fopen("user_secret.txt", "r");
+	for(k = 0; k < 10; k++)
+	{
+		fscanf(fp,"%s %s", u[k].number, u[k].secret);
+		//printf("%s  %s\n",u[k].number, u[k].secret);
+	}
+	fclose(fp);
 
 	for(i = 3; i >= 0; i--)
 	{
 		printf("\n\n\n\n\t\t\t  帐号:");
-		scanf("%s",user);
+		memset(username, '\0', sizeof(username));
+		fflush(stdin);
+		scanf("%s", username);
 		getchar();
+		for(j = 0; j < 10; j++,fff++)
+		{
+			if(strcmp(username, u[j].number) == 0)
+			break;
+		}
+		if(j == 10)
+		{
+			system("clear");
+			printf("\n\n\n\n\n\t\t\t   帐号不存在， 请重新输入");
+			sleep(1);
+			system("clear");
+			continue;
+		}
 		printf("\n\n\t");
+		fflush(stdin);
 		pass = getpass("\t\t\t  密码:");
-		if(strcmp(pass, "wangweihao") == 0)
+		if(strcmp(pass, u[j].secret) == 0)
 		{
 			printf("\n\n\n\n\t\t\t密码正确，欢迎进入...\n");
+			user[j].flag = 0;
 			sleep(2);
 			select_content();
 			//break;
@@ -197,15 +269,24 @@ void enter_user()
 		else
 		{
 			printf("\n\n\n\t\t\t密码错误，请重新输入...\n");
+			printf("\n\n\t\t\t按0退出,其他任意键继续输入");
+			scanf("%d",&s);
+			if(s == 0)
+			{
+				printf("\n\n\n\t\t\t谢谢使用， 再见！！！\n\n\n\n");	
+			        exit(0);
+			}
 			printf("\t\t\t您还有 %d 次登陆机会..",i);
 			sleep(2);
 			system("clear");
 		}
 	}
-
-	printf("\n\n\n\n\t\t\t输入错误次数太多，系统将自动退出...\n\n\n\n\n\n\n\n\n");
-	sleep(2);
-	exit(0);
+	if(i < 0)
+	{
+		printf("\n\n\n\n\t\t\t输入错误次数太多，系统将自动退出...\n\n\n\n\n\n\n\n\n");
+		sleep(2);
+		exit(0);
+	}
 }
 
 //申请帐号，ui是第i个user
@@ -213,12 +294,19 @@ void apply_user(void)
 {
 	int fd;
 	FILE *fp;
+	FILE *fpp;
  	char super[20] = "wangweihao";
 	char super2[20];
 	char *password;
 
-	fp = fopen("user_info.txt","at+");
+	fp = fopen("user_info.txt","a+");
 	if(fp == NULL)
+	{
+		printf("error\n");
+		exit(1);
+	}
+	fpp = fopen("user_secret.txt", "a+");
+	if(fpp == NULL)
 	{
 		printf("error\n");
 		exit(1);
@@ -266,20 +354,24 @@ void apply_user(void)
 	//fseek(fp, 0, SEEK_END);
 	//写入文件
 	//依次为账号， 密码， 姓名， 年龄， 性别， 个性签名， 属性， 是否存在， 通信连接套接字， 是否在线。
+	fflush(stdout);
 	fprintf(fp,"%s %s %s %d %s %s %d %d %d %d\n",user[ui].number, user[ui].secret,user[ui].name, user[ui].age, user[ui].sex, user[ui].aut, user[ui].attr, user[ui].exist, user[ui].con_fd, user[ui].flag);
+	fprintf(fpp,"%s %s\n",user[ui].number, user[ui].secret);
+	fclose(fp);
+	fclose(fpp);
 	printf("正在返回主界面，请稍后...\n");
 	sleep(2);
 
 	face();
 
-	fclose(fp);
 }
 
 //选项
 void select_content(void)
 {
 	int s;
-
+	int a;
+	struct Info tmp;
 	//initscr();
 	//box(stdscr,ACS_VLINE, ACS_HLINE);
 	system("clear");
@@ -295,6 +387,7 @@ void select_content(void)
 	printf("\t\t\t\t5 ~  私   聊 ~\n\n\n");
 	printf("\t\t\t\t6 ~  群   聊 ~\n\n\n");
 	printf("\t\t\t\t7 ~修 改 资 料~\n\n\n");
+	printf("\t\t\t\t8 ~个 人 资 料~\n\n\n");
 	printf("\t\t\t\t0 ~  退   出 ~\n\n\n\n");
 	printf("\t\t请选择：");
 	scanf("%d",&s);
@@ -306,9 +399,11 @@ void select_content(void)
 			break;
 		case 2:
 			see_live_friend();
+			select_content();
 			break;
 		case 3:
 			see_group();
+			select_content();
 			break;
 		case 4:
 			see_live_group();
@@ -321,13 +416,36 @@ void select_content(void)
 			break;
 		case 7:
 			mod_identify();
+			printf("\n\t\t\t按任意键返回上一项...");
+			getchar();
+			select_content();
+			break;
+		case 8:
+			see_data(&tmp);
+			printf("\n\t\t\t按任意键返回上一项...");
+			getchar();
+			select_content();
 			break;
 		case 0: 
 			system("clear");
-			printf("\n\n\n\n\n\n\n\n\n\t\t\t\t谢谢使用，再见！！...\n\n\n\n");
-			break;
+			printf("\n\n\n\n\n\n\t\t\t是否确认退出?\n\n");
+			printf("\t\t\t1.不是      0.退出\n\n");
+			printf("\t\t\t请选择:");
+			scanf("%d",&a);
+			switch(a)
+			{
+				case 1:
+					break;
+				case 0:
+					printf("\n\n\n\t\t\t您选择了退出,谢谢您的使用，再见！！\n\n\n\n\n\n");
+					sleep(1);
+					exit(0);
+				default:
+					printf("\n\n\n\t\t\t选择有误，系统将自动返回上一项！！\n\n\n\n\n\n");
+					break;
+			}
 		default:
-			printf("\n\n\t\t\t\t输入有误,请重新出入..\n");
+			//printf("\n\n\t\t\t\t输入有误,请重新出入..\n");
 			sleep(1);
 			system("clear");
 			select_content();
@@ -338,44 +456,141 @@ void select_content(void)
 
 void see_friend()
 {
-	int s,i;
+	int s, b, m;
+	int i, j, k, l, temp = 0;
 	char my_friend[10][20];
 	FILE *fp;
+	FILE *pp;
+	FILE *ff;
+	FILE *pf;
 	char u_number1[20];
 	char u_number2[20];
 
 	fp = fopen("friend.txt","r");
-	for(i = 0; i < 10; i++)
+	pp = fopen("friend.txt", "a+");
+	ff = fopen("friend.txt", "rt");
+	pf = fopen("oldfriend.txt", "w");
+	fflush(stdin);
+	for(i = 0; i < 10; i++, temp++)
 	{
-		fscanf(fp, "%s\n", my_friend[i]);
+		if(feof(fp) != 0)   //非0为真，到达了末尾。
+			break;
+		else
+			fscanf(fp, "%s\n", my_friend[i]);
 	}
-
 	system("clear");
 	printf("\n\n\n");
 	fflush(stdout);
 	printf("\n\t\t\t\t   我的好友\n\n\n");
-	for(i = 0; i < 10; i++)
+	for(j = 0; j < i; j++)
 	{
-		printf("\t\t\t\t%d ☆ ★ %s\n\n",i+1, my_friend[i]);
+		printf("\t\t\t\t%d ☆ ★ %s\n\n",j+1, my_friend[j]);
 	}
-	printf("  1 添加好友\n");
-	printf("  2 删除好友\n\n");
-	printf("请选择：");
+	printf("\t  1 添加好友\n");
+	printf("\t  2 删除好友\n\n");
+	printf("\t  请选择：");
 	scanf("%d",&s);
 	switch(s)
 	{
 		case 1:
-			printf("请输入添加号码:");
+			printf("\t  请输入添加号码:");
 			scanf("%s",u_number1);
-			printf("添加成功!\n");
+			for(i = 0; i < 10; i++)
+			{
+				if(strcmp(u_number1, a[i].number) == 0)
+				      break;
+			}
+			if(i == 10)
+			{
+				printf("\n\n\t\t您的输入有误，该用户不存在！！\n");
+				break;
+			}
+			else
+			{
+				printf("\n\n\t\t查询成功！！,请等待...\n");
+				sleep(1);
+				printf("\n\n\t\t\tuser:%s\n",a[i].number);
+				printf("\t\t\tname:%s\n",a[i].name);
+				printf("\t\t\tsex:%s\n",a[i].sex);
+				printf("\t\t\tage:%d\n", a[i].age);
+				printf("\t\t\taut:%s\n", a[i].aut);
+				if(a[i].attr == 0)
+				{
+					printf("\t\t\tattr:usual user\n");
+				}
+				else
+				{
+					printf("\t\t\tattr:super user\n");
+				}
+			}
+			printf("\t是否确认添加%s：\n", u_number1);
+			printf("\t0. yes      1. no\n");
+			scanf("%d", &b);
+			if(b == 0)
+			{
+				fprintf(pp, "%s\n", a[i].number);
+				fclose(pp);
+				printf("\t添加成功...即将返回上一项\n");
+				sleep(2);
+				select_content();
+			}
+			else
+			{
+				printf("\t即将返回上一项\n");
+				sleep(2);
+				select_content();
+			}
+			printf("\t添加成功!\n");
 			break;
 		case 2:
 			printf("请输入删除号码:");
 			scanf("%s",u_number2);
-			printf("删除成功!\n");
+			printf("\n");
+			for(k = 0; k < 10; k++)
+			{
+				if(strcmp(u_number2, my_friend[k]) == 0)
+				{
+				//	printf("k = %d, temp = %d, my_friend[k] = %s", k, temp, my_friend[k]);
+					printf("\t是否确认删除%s：\n\n",u_number2);
+					printf("\t0. yes     1. no\n\n");
+					printf("\t请选择:");
+					scanf("%d",&m);
+					if(m == 0)
+					{
+						printf("\n\t正在删除%s...\n", u_number2);
+						sleep(2);
+						getchar();
+						for(l = 0; l < temp; l++)
+						{
+							if(strcmp(my_friend[l], u_number2) == 0)
+							{
+								continue;
+							}
+							fprintf(pf, "%s\n", my_friend[l]);
+							printf("%s\n", my_friend[l]);
+							//fprintf(pf, "%s\n", my_friend[l]);
+						}
+						fclose(pf);
+						remove("friend.txt");
+						rename("oldfriend.txt", "friend.txt");
+						//rename("oldfriend.txt", "friend.txt");
+						printf("\n\t按任意键返回上一项\n");
+						getchar();
+						select_content();
+					}
+					else
+					{
+						printf("\n\t即将返回上一项...\n");
+						sleep(2);
+						select_content();
+					}
+				}
+			}
 			break;
 		default:
 			printf("输入错误，返回上一项...\n");
+			select_content();
+			break;
 	}
 
 	fclose(fp);
@@ -383,28 +598,98 @@ void see_friend()
 
 void see_live_friend()
 {
+	int i;
 
+
+	system("clear");
+	printf("\n\t\t\t\t在线好友\n\n");
+	for(i = 0; i < 10; i++)
+	{
+		printf("user flag = %d\n", user[i].flag);
+		if(user[i].flag == 0)
+		{
+			printf("\t\t\t %s\n",user[i].number);
+		}
+	}
+	sleep(2);
+	printf("\n\n\t\t\t按任意键返回上一项\n\n");
+	getchar();
 }
+
 
 void see_group()
 {
 	int s;
+	int i,j;
 	char g_number1[20];
 	char g_number2[20];
+	FILE *fp;
+	FILE *pp;
+	fp = fopen("group.txt", "at+");
+	pp = fopen("oldgroup.txt", "w");
+
+	system("clear");
+	printf("\n\n\n\n\t\t\t\t✲ ❈  ✿  ✲ ❈\n");
+	printf("\t\t\t\t 我  的  群 \n\n\n");
+	for(i = 0; i < 5; i++)  // 最多5个群
+	{
+		if(feof(fp) != 0)
+		{
+			break;
+		}
+		else
+		{
+			fscanf(fp, "%s\n", user[fff].group_name[i]);
+			printf("\t\t\t\t%s \n\n", user[fff].group_name[i]);
+		}
+	}
 
 	printf("  1 添加群\n\n");
-	printf("  2 删除群\n");
+	printf("  2 删除群\n\n\n");
+	printf("    请选择：");
+	scanf("%d", &s);
 	switch(s)
 	{
 		case 1:
-			printf("添加群号:\n");
+			printf("\n    添加群号:");
 			scanf("%s",g_number1);
+			printf("\n");
+			getchar();
+			printf("\t\t\t  正在添加，请稍后...\n\n");
+			fprintf(fp, "%s\n", g_number1);
+			sleep(2);
+			printf("\t\t\t  添加成功， 按任意键返回上一项\n");
+			getchar();
 			break;
 		case 2:
-			printf("删除群号:\n");
+			printf("    删除群号:");
 			scanf("%s",g_number2);
+			printf("\n");
+			sleep(1);
+			for(j = 0; j < i; j++)
+			{
+				if(strcmp(g_number2, user[fff].group_name[j]) == 0)
+				{
+					continue;
+				}
+				fprintf(pp, "%s\n", user[fff].group_name[j]); //fff是此用户
+			}
+			printf("\t\t\t  正在删除，请稍后...\n\n");
+			getchar();
+			sleep(2);
+			remove("group.txt");
+			rename("oldgroup.txt", "group.txt");
+			printf("\t\t\t  删除成功， 按任意键返回上一项\n");
+			getchar();
 			break;
+		case 3:
+			printf("\t\t\t  按任意键返回上一项\n");
+			getchar();
+			break;
+			
 	}
+	fclose(pp);
+	fclose(fp);
 }
 
 void see_live_group()
@@ -423,5 +708,110 @@ void enter_group()
 
 void mod_identify()
 {
+	int select;
+	FILE *p;
+	struct Info temp;
+	size_t count;
+//	struct Info a[10];
+	int i;
 
+	see_data(&temp);
+	p = fopen("user_info.txt", "rt+");
+	for(i = 0; i < 10; i++)
+	{
+		memset(a[i].number, 0, sizeof(a[i].number));
+		memset(a[i].secret, 0, sizeof(a[i].secret));
+		memset(a[i].name, 0, sizeof(a[i].name));
+		memset(a[i].sex, 0, sizeof(a[i].sex));
+		memset(a[i].aut, 0, sizeof(a[i].aut));
+		a[i].age = -1;
+		a[i].con_fd = -1;
+		a[i].exist = -1;
+		a[i].flag = -1;
+		a[i].attr = 0;
+	}
+	for(i = 0; i < 10; i++)
+	{
+		fscanf(p, "%s %s %s %d %s %s %d %d %d %d\n", a[i].number, a[i].secret, a[i].name, &a[i].age, a[i].sex, a[i].aut, &a[i].attr, &a[i].exist, &a[i].con_fd, &a[i].flag);
+	}
+	for(i = 0; i < 10; i++)
+	{
+		if(strcmp(username, a[i].number) == 0)
+		      break;
+	}
+	printf("\t\t\t请选择你要修改的资料的编号:");
+	scanf("%d", &select);
+	printf("\n");
+	switch(select)
+	{
+		case 1:
+			printf("\n\n\t\t\t抱歉，帐号不能修改！！\n\n");
+			break;
+		case 2:
+			printf("\t\t\told name:%s\n\n", temp.name);
+			printf("\t\t\t请输入新的name:");
+			scanf("%s",a[i].name);
+			break;
+		case 3:
+			printf("\t\t\told age:%d\n\n", temp.age);
+			printf("\t\t\t请输入新的age:");
+			scanf("%d", &a[i].age);
+			break;
+		case 4:
+			printf("\t\t\told sex:%s\n\n", temp.sex);
+			printf("\t\t\t请输入新的sex:");
+			scanf("%s", a[i].sex);
+			break;
+		case 5: 
+			printf("\t\t\told aut%s\n\n",temp.aut);
+			printf("\t\t\t请输入新的aut:");
+			scanf("%s", a[i].aut);
+			break;
+		case 6:
+			printf("\n\n\n\t\t\t身份不能修改！！\n\n");
+			break;
+
+	}
+	fseek(p, 0, SEEK_SET);
+	for(i = 0; i < 10; i++)
+	{
+		fprintf(p, "%s %s %s %d %s %s %d %d %d %d\n",a[i].number, a[i].secret, a[i].name, a[i].age, a[i].sex, a[i].aut, a[i].attr, a[i].exist, a[i].con_fd, a[i].flag);
+	}
+	//printf("index = %d", dex);
+	getchar();
+	fclose(p);
+}
+
+
+void see_data(struct Info *tmp)
+{
+	FILE *fp;
+	int i;
+
+	fp = fopen("user_info.txt", "r");
+	for(i = 0, dex = 0; i < 10; i++, dex++)
+	{
+		fflush(stdout);
+		fscanf(fp,"%s %s %s %d %s %s %d %d %d %d\n",tmp->number, tmp->secret, tmp->name, &tmp->age, tmp->sex, tmp->aut, &tmp->attr, &tmp->exist, &tmp->con_fd, &tmp->flag);
+		if(strcmp(username, tmp->number) == 0)
+		{
+			system("clear");
+			printf("\n\n\n\n\n\n\t\t\t1.user:%s\n\n", tmp->number);
+			printf("\t\t\t2.name:%s\n\n", tmp->name);
+			printf("\t\t\t3.age :%d\n\n", tmp->age);
+			printf("\t\t\t4.sex :%s\n\n", tmp->sex);
+			printf("\t\t\t5.aut :%s\n\n", tmp->aut);
+			if(tmp->attr == 1)
+			{
+				printf("\t\t\t6.attr:super user\n\n\n\n\n");
+			}
+			else
+			{
+				printf("\t\t\t6.attr:usual user\n\n\n\n\n");
+			}
+			
+			break;
+		}
+	}
+	fclose(fp);
 }
